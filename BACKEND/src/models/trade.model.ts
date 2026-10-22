@@ -1,12 +1,9 @@
+import type { ITrade } from './../types/trade/trade.types';
+import { TradeStatus } from './../types/enums/trade-status.enum';
+import { TradeEmotion } from './../types/enums/trade-emotion.enum';
+import { MarketType } from './../types/enums/market-type.enum';
 import { Schema, model } from 'mongoose';
-
-import {
-  MarketType,
-  TradeEmotion,
-  TradeStatus,
-  TradeType,
-  type ITrade,
-} from '../types/trade';
+import { TradeType } from './../types/enums/trade.type.enum';
 
 const tradeSchema = new Schema<ITrade>(
   {
@@ -37,7 +34,7 @@ const tradeSchema = new Schema<ITrade>(
 
     exitPrice: {
       type: Number,
-      min: [0, 'Exit price must be greater than zero'],
+      min: [Number.MIN_VALUE, 'Exit price must be greater than zero'],
     },
 
     exitDate: {
@@ -46,18 +43,18 @@ const tradeSchema = new Schema<ITrade>(
 
     stopLoss: {
       type: Number,
-      min: [0, 'Stop loss must be greater than zero'],
+      min: [Number.MIN_VALUE, 'Stop loss must be greater than zero'],
     },
 
     takeProfit: {
       type: Number,
-      min: [0, 'Take profit must be greater than zero'],
+      min: [Number.MIN_VALUE, 'Take profit must be greater than zero'],
     },
 
     quantity: {
       type: Number,
       required: true,
-      min: [0, 'Quantity must be greater than zero'],
+      min: [Number.MIN_VALUE, 'Quantity must be greater than zero'],
     },
 
     fees: {
@@ -102,6 +99,7 @@ const tradeSchema = new Schema<ITrade>(
       maxlength: [2000, 'Notes cannot exceed 2000 characters'],
     },
   },
+
   {
     timestamps: true,
     versionKey: false,

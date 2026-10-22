@@ -1,28 +1,7 @@
-export enum TradeType {
-  BUY = 'buy',
-  SELL = 'sell',
-}
-
-export enum TradeEmotion {
-  HAPPY = 'happy',
-  SAD = 'sad',
-  NEUTRAL = 'neutral',
-}
-
-export enum TradeStatus {
-  OPEN = 'open',
-  CLOSED = 'closed',
-}
-
-export enum MarketType {
-  FOREX = 'forex',
-  CRYPTO = 'crypto',
-  STOCK = 'stock',
-  COMMODITY = 'commodity',
-  INDEX = 'index',
-  FUTURES = 'futures',
-  OPTIONS = 'options',
-}
+import type { TradeType } from './../enums/trade.type.enum';
+import type { TradeEmotion } from './../enums/trade-emotion.enum';
+import type { TradeStatus } from './../enums/trade-status.enum';
+import type { MarketType } from './../enums/market-type.enum';
 
 export interface ITrade {
   accountId: string;
