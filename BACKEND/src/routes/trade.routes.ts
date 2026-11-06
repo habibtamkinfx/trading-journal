@@ -6,6 +6,7 @@ import {
 } from 'express';
 import { Trade } from './../models/trade.model';
 import { TradeStatus } from '../types/enums/trade-status.enum';
+import { MarketType } from '../types/enums/market-type.enum';
 import { validationResult } from 'express-validator';
 import tradeValidator from '../validators/trade.validator';
 const router = Router();
@@ -28,8 +29,23 @@ router.get('/', async (req, res, next) => {
         pagination: null,
       });
     }
+    if (
+      req.query.marketType &&
+      !Object.values(MarketType).includes(req.query.marketType as MarketType)
+    ) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid marketType filter',
+        data: null,
+        pagination: null,
+      });
+    }
     const status = req.query.status as TradeStatus | undefined;
-    const filter = status ? { status: status } : {};
+    const marketType = req.query.marketType as MarketType | undefined;
+    const filter = {
+      ...(status ? { status } : {}),
+      ...(marketType ? { marketType } : {}),
+    };
     const totalTrades = await Trade.countDocuments(filter);
     const totalPages = Math.ceil(totalTrades / limit);
     if (page > totalPages && totalTrades > 0) {
