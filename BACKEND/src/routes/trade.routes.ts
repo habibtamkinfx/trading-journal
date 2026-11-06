@@ -5,6 +5,7 @@ import {
   type Response,
 } from 'express';
 import { Trade } from './../models/trade.model';
+import { TradeStatus } from '../types/enums/trade-status.enum';
 import { validationResult } from 'express-validator';
 import tradeValidator from '../validators/trade.validator';
 const router = Router();
@@ -16,7 +17,20 @@ router.get('/', async (req, res, next) => {
   );
   const page = Math.max(parseInt(req.query.page as string) || 1, 1);
   try {
-    const totalTrades = await Trade.countDocuments();
+    if (
+      req.query.status &&
+      !['open', 'closed'].includes(req.query.status as string)
+    ) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid status filter',
+        data: null,
+        pagination: null,
+      });
+    }
+    const status = req.query.status as TradeStatus | undefined;
+    const filter = status ? { status: status } : {};
+    const totalTrades = await Trade.countDocuments(filter);
     const totalPages = Math.ceil(totalTrades / limit);
     if (page > totalPages && totalTrades > 0) {
       return res.status(404).json({
@@ -26,7 +40,7 @@ router.get('/', async (req, res, next) => {
         pagination: null,
       });
     }
-    const trades = await Trade.find()
+    const trades = await Trade.find(filter)
       .sort({ createdAt: -1 })
       .skip((page - 1) * limit)
       .limit(limit);
