@@ -40,12 +40,33 @@ router.get('/', async (req, res, next) => {
         pagination: null,
       });
     }
+
+    const symbolQuery = req.query.symbol;
+    if (symbolQuery !== undefined && typeof symbolQuery !== 'string') {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid symbol filter',
+        data: null,
+        pagination: null,
+      });
+    }
+    const symbol = symbolQuery?.trim().toUpperCase();
+    if (symbolQuery !== undefined && !symbol) {
+      return res.status(400).json({
+        success: false,
+        message: 'Symbol filter cannot be empty',
+        data: null,
+        pagination: null,
+      });
+    }
     const status = req.query.status as TradeStatus | undefined;
     const marketType = req.query.marketType as MarketType | undefined;
     const filter = {
       ...(status ? { status } : {}),
       ...(marketType ? { marketType } : {}),
+      ...(symbol ? { symbol } : {}),
     };
+
     const totalTrades = await Trade.countDocuments(filter);
     const totalPages = Math.ceil(totalTrades / limit);
     if (page > totalPages && totalTrades > 0) {
