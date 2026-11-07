@@ -7,6 +7,7 @@ import {
 import { Trade } from './../models/trade.model';
 import { TradeStatus } from '../types/enums/trade-status.enum';
 import { MarketType } from '../types/enums/market-type.enum';
+import { TradeType } from '../types/enums/trade.type.enum';
 import { validationResult } from 'express-validator';
 import tradeValidator from '../validators/trade.validator';
 const router = Router();
@@ -18,6 +19,7 @@ router.get('/', async (req, res, next) => {
   );
   const page = Math.max(parseInt(req.query.page as string) || 1, 1);
   try {
+    // Validate status filter
     if (
       req.query.status &&
       !['open', 'closed'].includes(req.query.status as string)
@@ -29,6 +31,8 @@ router.get('/', async (req, res, next) => {
         pagination: null,
       });
     }
+
+    // Validate marketType filter
     if (
       req.query.marketType &&
       !Object.values(MarketType).includes(req.query.marketType as MarketType)
@@ -42,6 +46,7 @@ router.get('/', async (req, res, next) => {
     }
 
     const symbolQuery = req.query.symbol;
+    // Validate that if symbol is provided, it is a string
     if (symbolQuery !== undefined && typeof symbolQuery !== 'string') {
       return res.status(400).json({
         success: false,
@@ -51,6 +56,7 @@ router.get('/', async (req, res, next) => {
       });
     }
     const symbol = symbolQuery?.trim().toUpperCase();
+    // Validate that if symbol is provided, it is not empty
     if (symbolQuery !== undefined && !symbol) {
       return res.status(400).json({
         success: false,
@@ -59,16 +65,33 @@ router.get('/', async (req, res, next) => {
         pagination: null,
       });
     }
+    // Validate tradeType filter
+    if (
+      req.query.tradeType &&
+      !Object.values(TradeType).includes(req.query.tradeType as TradeType)
+    ) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid tradeType filter',
+        data: null,
+        pagination: null,
+      });
+    }
+
     const status = req.query.status as TradeStatus | undefined;
     const marketType = req.query.marketType as MarketType | undefined;
+    const tradeType = req.query.tradeType as TradeType | undefined;
+
     const filter = {
       ...(status ? { status } : {}),
       ...(marketType ? { marketType } : {}),
       ...(symbol ? { symbol } : {}),
+      ...(tradeType ? { tradeType } : {}),
     };
 
     const totalTrades = await Trade.countDocuments(filter);
     const totalPages = Math.ceil(totalTrades / limit);
+    // Validate that the requested page is not greater than the total number of pages
     if (page > totalPages && totalTrades > 0) {
       return res.status(404).json({
         success: false,
