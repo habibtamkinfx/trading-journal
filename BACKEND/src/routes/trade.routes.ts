@@ -401,4 +401,30 @@ router.patch(
   },
 );
 
+router.delete(
+  "/:id",
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const id = req.params.id;
+      const trade = await Trade.findByIdAndDelete(id);
+      if (!trade) {
+        return res.status(404).json({
+          success: false,
+          message: "Trade not found",
+          data: null,
+          pagination: null,
+        });
+      }
+      res.status(200).json({
+        success: true,
+        message: "Trade deleted successfully",
+        data: trade,
+        pagination: null,
+      });
+    } catch (error) {
+      next(error);
+    }
+  },
+);
+
 export default router;
