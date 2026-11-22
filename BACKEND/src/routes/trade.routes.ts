@@ -10,20 +10,30 @@ import { MarketType } from "../types/enums/market-type.enum";
 import { TradeType } from "../types/enums/trade.type.enum";
 import { validationResult } from "express-validator";
 import { tradesValidator, tradeUpdateValidator } from "../validators";
-import { ITrade } from "../types/trade/trade.types";
+import { parseDateOnly } from "../utils";
+import { createTradeController } from "../controllers";
 const router = Router();
 
 router.get("/", async (req: Request, res: Response, next: NextFunction) => {
-  const limit = Math.min(
-    Math.max(parseInt(req.query.limit as string) || 10, 1),
-    100,
-  );
-  const page = Math.max(parseInt(req.query.page as string) || 1, 1);
+  let limitQuery = 10; // Default limit
+  if (typeof req.query.limit === "string" && req.query.limit.trim() !== "") {
+    limitQuery = Number(req.query.limit);
+    limitQuery = Number.isInteger(limitQuery) ? limitQuery : 10;
+  }
+  const limit = Math.max(Math.min(limitQuery, 100), 1); // Ensure limit is between 1 and 100
+
+  let pageQuery = 1; // Default page
+  if (typeof req.query.page === "string" && req.query.page.trim() !== "") {
+    pageQuery = Number(req.query.page);
+    pageQuery = Number.isInteger(pageQuery) ? pageQuery : 1;
+  }
+  const page = Math.max(pageQuery, 1); // Ensure page is at least 1
+
   try {
     // Validate status filter
     if (
       req.query.status &&
-      !["open", "closed"].includes(req.query.status as string)
+      !Object.values(TradeStatus).includes(req.query.status as TradeStatus)
     ) {
       return res.status(400).json({
         success: false,
@@ -93,8 +103,8 @@ router.get("/", async (req: Request, res: Response, next: NextFunction) => {
     }
 
     if (startDateQuery !== undefined) {
-      startDate = new Date(startDateQuery);
-      if (Number.isNaN(startDate.getTime())) {
+      const parsedStartDate = parseDateOnly(startDateQuery);
+      if (parsedStartDate === null) {
         return res.status(400).json({
           success: false,
           message: "Invalid startDate",
@@ -102,6 +112,7 @@ router.get("/", async (req: Request, res: Response, next: NextFunction) => {
           pagination: null,
         });
       }
+      startDate = parsedStartDate;
     }
 
     const endDateQuery = req.query.endDate;
@@ -115,8 +126,8 @@ router.get("/", async (req: Request, res: Response, next: NextFunction) => {
     }
 
     if (endDateQuery !== undefined) {
-      endDate = new Date(endDateQuery);
-      if (Number.isNaN(endDate.getTime())) {
+      const parsedEndDate = parseDateOnly(endDateQuery);
+      if (parsedEndDate === null) {
         return res.status(400).json({
           success: false,
           message: "Invalid endDate",
@@ -124,6 +135,7 @@ router.get("/", async (req: Request, res: Response, next: NextFunction) => {
           pagination: null,
         });
       }
+      endDate = parsedEndDate;
     }
 
     if (startDate && endDate && startDate > endDate) {
@@ -217,35 +229,7 @@ router.get("/:id", async (req: Request, res: Response, next: NextFunction) => {
   }
 });
 
-router.post(
-  "/",
-  tradesValidator(),
-  async (req: Request, res: Response, next: NextFunction) => {
-    const result = validationResult(req);
-    if (!result.isEmpty()) {
-      const messages = result.array().map((err) => err.msg);
-      res.status(400).json({
-        success: false,
-        message: "Bad request",
-        data: messages,
-        pagination: null,
-      });
-      return;
-    }
-    try {
-      const data: ITrade = req.body;
-      const trade = await Trade.create(data);
-      res.status(201).json({
-        success: true,
-        message: "trade successfully created",
-        data: trade,
-        pagination: null,
-      });
-    } catch (error) {
-      next(error);
-    }
-  },
-);
+router.post("/", tradesValidator(), createTradeController);
 
 router.patch(
   "/:id",
