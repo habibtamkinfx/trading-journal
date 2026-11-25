@@ -1,2 +1,6 @@
-import { createTradeController, getTradesController } from "./trade.controller";
-export { createTradeController, getTradesController };
+import {
+  createTradeController,
+  getTradesController,
+  getTradeController,
+} from "./trade.controller";
+export { createTradeController, getTradesController, getTradeController };

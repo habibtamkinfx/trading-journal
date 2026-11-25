@@ -66,4 +66,10 @@ export const getTradesService = async (params: GetTradesParams) => {
   };
 };
 
-
+export const getTradeService = async (tradeId: string) => {
+  const trade = await Trade.findById(tradeId);
+  if (!trade) {
+    throw new AppError("Trade not found", 404);
+  }
+  return trade;
+};

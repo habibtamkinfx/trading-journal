@@ -8,33 +8,13 @@ import { Trade } from "./../models/trade.model";
 import { TradeStatus } from "../types/enums/trade-status.enum";
 import { validationResult } from "express-validator";
 import { tradesValidator, tradeUpdateValidator } from "../validators";
-import { createTradeController, getTradesController } from "../controllers";
+import { createTradeController, getTradeController, getTradesController } from "../controllers";
 
 const router = Router();
 
 router.get("/", getTradesController);
 
-router.get("/:id", async (req: Request, res: Response, next: NextFunction) => {
-  try {
-    const trade = await Trade.findById(req.params.id);
-    if (!trade) {
-      return res.status(404).json({
-        success: false,
-        message: "trade not found",
-        data: null,
-        pagination: null,
-      });
-    }
-    res.status(200).json({
-      success: true,
-      message: "Trade found successfully",
-      data: trade,
-      pagination: null,
-    });
-  } catch (error) {
-    next(error);
-  }
-});
+router.get("/:id", getTradeController);
 
 router.post("/", tradesValidator(), createTradeController);
 

@@ -1,13 +1,16 @@
 import { type NextFunction, type Request, type Response } from "express";
 import { validationResult } from "express-validator";
-import { createTradeService } from "../services";
+import {
+  createTradeService,
+  getTradeService,
+  getTradesService,
+} from "../services";
 import type { ITrade } from "../types/trade/trade.types";
 import { parseDateOnly } from "../utils";
 import { TradeType } from "../types/enums/trade.type.enum";
 import { TradeStatus } from "../types/enums/trade-status.enum";
 import { MarketType } from "../types/enums/market-type.enum";
-import { getTradesService } from "../services/trade.service";
-import { Trade } from "../models/trade.model";
+import AppError from "../errors/app-error";
 
 export const createTradeController = async (
   req: Request,
@@ -176,7 +179,6 @@ export const getTradesController = async (
       });
     }
 
-
     const params = {
       page,
       limit,
@@ -194,6 +196,28 @@ export const getTradesController = async (
       message: "trades retrieved successfully",
       data: trades.trades,
       pagination: trades.pagination,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const getTradeController = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) => {
+  try {
+    const tradeId = req.params.id;
+    if (typeof tradeId !== "string") {
+      return next(new AppError("Invalid trade ID", 400));
+    }
+    const trade = await getTradeService(tradeId);
+    res.status(200).json({
+      success: true,
+      message: "Trade found successfully",
+      data: trade,
+      pagination: null,
     });
   } catch (error) {
     next(error);
